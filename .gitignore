@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Model files
+*.h5
+*.pkl
+*.joblib
+*.model
+data/models/
+*.weights
+
+# Large data files
+*.zip
+*.tar.gz
+*.rar
