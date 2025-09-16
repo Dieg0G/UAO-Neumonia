@@ -8,6 +8,3 @@ modelo/
 temp.png
 out.png
 tests/
-
-git add .
-git commit -m "Versión final: integrator, app.py y Dockerfile listos"
