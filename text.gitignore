@@ -1,0 +1,13 @@
+# Modelos y datos pesados
+data/models/
+data/raw/
+modelo/
+
+# Imágenes y archivos temporales
+*.png
+temp.png
+out.png
+tests/
+
+git add .
+git commit -m "Versión final: integrator, app.py y Dockerfile listos"
