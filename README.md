@@ -1,7 +1,3 @@
-¡Perfecto! Basado en toda la conversación anterior y en el contenido del archivo `README.md` que subiste, aquí tienes una **versión refinada, organizada y profesional del README.md del proyecto**, integrando todos los avances técnicos, correcciones de arquitectura y buenas prácticas discutidas (especialmente la separación de responsabilidades, uso de `tf.GradientTape`, estructura de paquetes, y eliminación de preprocesamiento redundante).
-
----
-
 # 🏥 Sistema de Detección de Neumonía con Deep Learning y Grad-CAM
 
 [![Python](https://img.shields.io/badge/Python-3.9-blue.svg)](https://www.python.org/)
