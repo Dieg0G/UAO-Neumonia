@@ -1,0 +1,10 @@
+# Modelos y datos pesados
+data/models/
+data/raw/
+modelo/
+
+# Imágenes y archivos temporales
+*.png
+temp.png
+out.png
+tests/
