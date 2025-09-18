@@ -214,14 +214,14 @@ Grad-CAM identifica qué regiones de la imagen influyeron más en la decisión d
 
 ## 📚 Modelo CNN Utilizado
 
-Basado en el trabajo de [Pasa et al., 2019](https://arxiv.org/abs/1904.08711):
+Basado en una arquitectura personalizada inspirada en ResNet-like, diseñada para clasificación de radiografías de tórax:
 
-- **5 bloques convolucionales** con conexiones residuales (skip connections).
-- Filtros por bloque: 16 → 32 → 48 → 64 → 80.
-- Max Pooling después de cada bloque.
-- Capas densas finales: 1024 → 1024 → 3 (clases).
-- Regularización: Dropout del 20% en capas 4, 5 y primera densa.
-- **Capa de interés para Grad-CAM**: `conv10_thisone` (última convolución antes del clasificador).
+- **5 bloques convolucionales** con conexiones residuales (skip connections) y normalización por lote (BatchNorm).
+- **Filtros por bloque**: 16 → 32 → 48 → 64 → **128** (actualizado según el modelo entrenado).
+- **Max Pooling** después de cada bloque, seguido de **Average Pooling** antes de las capas densas.
+- **Capas densas finales**: 1024 → 1024 → 3 (clases: bacteriana, normal, viral).
+- **Regularización**: Dropout del 20% aplicado tras el bloque 4, bloque 5 y la primera capa densa.
+- **Capa de interés para Grad-CAM**: `conv10_thisone` — última capa convolucional antes del flatten, con 128 filtros.
 
 > ✅ El modelo fue entrenado en un conjunto de radiografías de tórax públicas y alcanza altos niveles de precisión en clasificación binaria y ternaria.
 
