@@ -98,9 +98,24 @@ proyecto-neumonia/
    ```bash
    uv pip install -r requirements.txt
    ```
-   > ✅ `uv` es compatible con `requirements.txt` y lo instala mucho más rápido que `pip`.
+   > ✅ `uv` es compatible con `requirements.txt` y lo instala hasta 10x más rápido que `pip`.
 
-5. **Verificar la estructura de archivos**:
+5. **Descargar y colocar el modelo entrenado**  
+   > ⚠️ **Importante**: El archivo del modelo `conv_MLP_84.h5` (≈ 120 MB) **no está incluido en el repositorio por limitaciones de GitHub**.  
+   > Descárgalo manualmente desde:  
+   > 🔗 [https://drive.google.com/file/d/1aVHdgd4yKJn2C92eqqKS0TW3GKq3QjWd/view?usp=sharing](conv_MLP_84.h5)  
+   >   
+   > Una vez descargado, créalo en la carpeta:  
+   > ```
+   > UAO-Neumonia/data/models/conv_MLP_84.h5
+   > ```
+   >   
+   > Si la carpeta `data/models/` no existe, créala:
+   > ```bash
+   > mkdir -p data/models
+   > ```
+
+6. **Verificar la estructura de archivos**  
    Asegúrate de que existan estos archivos vacíos (para que Python reconozca los paquetes):
    ```
    src/__init__.py
@@ -112,7 +127,6 @@ proyecto-neumonia/
    touch src/__init__.py
    touch src/data/__init__.py
    ```
-
    > En Windows (PowerShell):
    > ```powershell
    > New-Item -ItemType File -Path "src\__init__.py"
