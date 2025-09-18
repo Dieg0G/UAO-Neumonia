@@ -1,24 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-    """
-    Preprocesa una imagen para que pueda ser usada por el modelo de predicción.
-
-    Pasos:
-        1. Resize a target_size.
-        2. Conversión a escala de grises.
-        3. Aplicación de CLAHE (ecualización adaptativa).
-        4. Normalización (0 a 1).
-        5. Expansión de dimensiones -> batch tensor (1, H, W, 1).
-
-    Args:
-        image (np.ndarray): Imagen de entrada (array NumPy).
-        target_size (tuple): Tamaño de salida (ancho, alto). Default: (512, 512).
-
-    Returns:
-        np.ndarray: Imagen preprocesada lista para el modelo con shape (1, H, W, 1).
-    """
-
 import cv2
 import numpy as np
 
