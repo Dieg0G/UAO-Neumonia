@@ -13,7 +13,7 @@ import numpy as np
 from src.data.read_img import read_dicom
 from src.data.preprocess_img import preprocess
 from src.data.load_model import model_fun
-from src.data.grad_cam import generate_grad_cam
+from src.data.grad_cam import grad_cam
 
 
 def predict_pipeline(path: str, layer_name: str = "conv10_thisone"):
@@ -45,7 +45,7 @@ def predict_pipeline(path: str, layer_name: str = "conv10_thisone"):
     label = labels[class_idx]
 
     # 5. Grad-CAM
-    heatmap = generate_grad_cam(model, preprocessed, layer_name)
+    heatmap = grad_cam(model, preprocessed, layer_name)
 
     return label, proba, heatmap, img_pil
 
