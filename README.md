@@ -1,7 +1,3 @@
-¡Perfecto! Basado en toda la conversación anterior y en el contenido del archivo `README.md` que subiste, aquí tienes una **versión refinada, organizada y profesional del README.md del proyecto**, integrando todos los avances técnicos, correcciones de arquitectura y buenas prácticas discutidas (especialmente la separación de responsabilidades, uso de `tf.GradientTape`, estructura de paquetes, y eliminación de preprocesamiento redundante).
-
----
-
 # 🏥 Sistema de Detección de Neumonía con Deep Learning y Grad-CAM
 
 [![Python](https://img.shields.io/badge/Python-3.9-blue.svg)](https://www.python.org/)
@@ -22,7 +18,7 @@ Este sistema implementa un modelo de **Deep Learning basado en Redes Neuronales 
 
 Además, integra la técnica de **Grad-CAM (Gradient-weighted Class Activation Mapping)** para generar mapas de calor que resaltan las regiones de la imagen más relevantes para la decisión del modelo, mejorando la transparencia y confianza clínica en las predicciones.
 
-La interfaz gráfica permite cargar imágenes en formatos DICOM, JPG y PNG, realizar predicciones en tiempo real y generar reportes PDF o CSV para documentación médica.
+La interfaz gráfica permite cargar imágenes en formatos DICOM, JPG y PNG, realizar predicciones en tiempo real y generar reportes para documentación médica.
 
 ---
 
@@ -56,9 +52,6 @@ proyecto-neumonia/
 > ✅ **Separación clara**: Preprocesamiento, inferencia y visualización están desacoplados.  
 > ✅ **No se duplica lógica**: `grad_cam.py` recibe la imagen ya preprocesada por `preprocess_img.py`.
 
----
-
-¡Perfecto! A continuación, te presento las **instrucciones actualizadas para usar `uv`** (el nuevo gestor de paquetes rápido y moderno de Python) en lugar de Anaconda/Miniconda, manteniendo toda la estructura, claridad y profesionalismo del README original.
 
 ---
 
@@ -105,9 +98,24 @@ proyecto-neumonia/
    ```bash
    uv pip install -r requirements.txt
    ```
-   > ✅ `uv` es compatible con `requirements.txt` y lo instala mucho más rápido que `pip`.
+   > ✅ `uv` es compatible con `requirements.txt` y lo instala hasta 10x más rápido que `pip`.
 
-5. **Verificar la estructura de archivos**:
+5. **Descargar y colocar el modelo entrenado**  
+   > ⚠️ **Importante**: El archivo del modelo `conv_MLP_84.h5` (≈ 120 MB) **no está incluido en el repositorio por limitaciones de GitHub**.  
+   > Descárgalo manualmente desde:  
+   > 🔗 [https://drive.google.com/file/d/1aVHdgd4yKJn2C92eqqKS0TW3GKq3QjWd/view?usp=sharing](conv_MLP_84.h5)  
+   >   
+   > Una vez descargado, créalo en la carpeta:  
+   > ```
+   > UAO-Neumonia/data/models/conv_MLP_84.h5
+   > ```
+   >   
+   > Si la carpeta `data/models/` no existe, créala:
+   > ```bash
+   > mkdir -p data/models
+   > ```
+
+6. **Verificar la estructura de archivos**  
    Asegúrate de que existan estos archivos vacíos (para que Python reconozca los paquetes):
    ```
    src/__init__.py
@@ -119,7 +127,6 @@ proyecto-neumonia/
    touch src/__init__.py
    touch src/data/__init__.py
    ```
-
    > En Windows (PowerShell):
    > ```powershell
    > New-Item -ItemType File -Path "src\__init__.py"
@@ -221,14 +228,14 @@ Grad-CAM identifica qué regiones de la imagen influyeron más en la decisión d
 
 ## 📚 Modelo CNN Utilizado
 
-Basado en el trabajo de [Pasa et al., 2019](https://arxiv.org/abs/1904.08711):
+Basado en una arquitectura personalizada inspirada en ResNet-like, diseñada para clasificación de radiografías de tórax:
 
-- **5 bloques convolucionales** con conexiones residuales (skip connections).
-- Filtros por bloque: 16 → 32 → 48 → 64 → 80.
-- Max Pooling después de cada bloque.
-- Capas densas finales: 1024 → 1024 → 3 (clases).
-- Regularización: Dropout del 20% en capas 4, 5 y primera densa.
-- **Capa de interés para Grad-CAM**: `conv10_thisone` (última convolución antes del clasificador).
+- **5 bloques convolucionales** con conexiones residuales (skip connections) y normalización por lote (BatchNorm).
+- **Filtros por bloque**: 16 → 32 → 48 → 64 → **128** (actualizado según el modelo entrenado).
+- **Max Pooling** después de cada bloque, seguido de **Average Pooling** antes de las capas densas.
+- **Capas densas finales**: 1024 → 1024 → 3 (clases: bacteriana, normal, viral).
+- **Regularización**: Dropout del 20% aplicado tras el bloque 4, bloque 5 y la primera capa densa.
+- **Capa de interés para Grad-CAM**: `conv10_thisone` — última capa convolucional antes del flatten, con 128 filtros.
 
 > ✅ El modelo fue entrenado en un conjunto de radiografías de tórax públicas y alcanza altos niveles de precisión en clasificación binaria y ternaria.
 
