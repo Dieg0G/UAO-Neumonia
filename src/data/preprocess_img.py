@@ -1,28 +1,43 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+preprocess_img.py
+-----------------
+Módulo para preprocesar imágenes de rayos X.
+Recibe el array proveniente de read_img.py y devuelve
+un tensor listo para el modelo (1, 512, 512, 1).
+"""
+
 import cv2
 import numpy as np
 
 
 def preprocess(image: np.ndarray, target_size: tuple = (512, 512)) -> np.ndarray:
-    import tensorflow as tf
-    # Convert input to tensor if not already
-    img = tf.convert_to_tensor(image, dtype=tf.float32)
     # Resize
-    img = tf.image.resize(img, target_size)
-    # If input is RGB, convert to grayscale
-    if img.shape[-1] == 3:
-        img = tf.image.rgb_to_grayscale(img)
-    # Normalize [0,1]
-    img = img / 255.0
-    # Expand dims: (1, H, W, 1)
-    img = tf.expand_dims(img, axis=0)
-    return img
+    resized = cv2.resize(image, target_size)
+
+    # Escala de grises (si no lo está ya)
+    if len(resized.shape) == 3 and resized.shape[-1] == 3:
+        gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = resized
+
+    # CLAHE (contraste adaptativo)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+    enhanced = clahe.apply(gray)
+
+    # Normalización [0,1]
+    normalized = enhanced / 255.0
+
+    # Expandir dimensiones -> (1, H, W, 1)
+    preprocessed = np.expand_dims(normalized, axis=-1)
+    preprocessed = np.expand_dims(preprocessed, axis=0)
+
+    return preprocessed
 
 
 if __name__ == "__main__":
-    # Test rápido (con imagen dummy)
-    dummy = np.zeros((600, 600, 3), dtype=np.uint8)
-    processed = preprocess(dummy)
-    print("Shape procesada:", processed.shape)
+    # ⚠️ Aquí NO se lee de nuevo la imagen
+    # Para probarlo, otro script debe haber creado "array" con read_img.py
+    print("[INFO] Este módulo solo define preprocess(). Úsalo desde integrator.py")
