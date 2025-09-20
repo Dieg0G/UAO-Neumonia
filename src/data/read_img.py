@@ -23,7 +23,7 @@ def read_dicom(path: str):
 if __name__ == "__main__":
     # Prueba de lectura rápida
     try:
-        array, img = read_dicom("data/raw/sample.dcm")
+        array, img = read_dicom("data/raw/viral.dcm")
         print(f"[OK] Imagen cargada con forma: {array.shape}")
         img.show()  # Muestra la imagen en una ventana
     except Exception as e:

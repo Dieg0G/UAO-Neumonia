@@ -14,7 +14,7 @@ def model_fun():
     Returns:
         tf.keras.Model: Modelo cargado y listo para usar
     """
-    model_path = r"G:\UAO\ESP IA\Proyectos\neumonia\data\models\conv_MLP_84.h5"
+    model_path = r"E:\MODULO01IA\UAO-Neumonia\data\models\conv_MLP_84.h5"
 
     # Verificar que el archivo existe
     if not os.path.exists(model_path):
