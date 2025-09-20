@@ -1,59 +1,57 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
-integrator.py
--------------
-Módulo integrador del flujo:
-1. Lectura de imagen DICOM.
-2. Preprocesamiento.
-3. Carga del modelo.
-4. Predicción.
-5. Grad-CAM (mapa de calor).
+Script integrador para ejecutar todo el flujo:
+1. Leer imagen DICOM
+2. Preprocesar imagen
+3. Cargar modelo
+4. Generar Grad-CAM
+5. Mostrar y guardar resultado
 """
 
-import numpy as np
+import os
+import matplotlib.pyplot as plt
+import cv2
+
 from src.data.read_img import read_dicom
 from src.data.preprocess_img import preprocess
 from src.data.load_model import model_fun
 from src.data.grad_cam import grad_cam
 
 
-def predict_pipeline(path: str, layer_name: str = "conv10_thisone"):
-    """
-    Ejecuta el flujo completo sobre una imagen.
+def main():
+    # 1. Ruta de la imagen de prueba
+    dicom_path = "data/raw/sample.dcm"
 
-    Args:
-        path (str): Ruta al archivo DICOM.
-        layer_name (str): Nombre de la capa conv para Grad-CAM.
+    # 2. Leer imagen DICOM
+    array, _ = read_dicom(dicom_path)
+    print(f"[OK] Imagen cargada con shape: {array.shape}")
 
-    Returns:
-        tuple: (label, probabilidad, heatmap)
-    """
-    # 1. Lectura
-    img_array, img_pil = read_dicom(path)
+    # 3. Preprocesar imagen
+    processed = preprocess(array)
+    print(f"[OK] Imagen preprocesada con shape: {processed.shape}")
 
-    # 2. Preprocesamiento
-    preprocessed = preprocess(img_array)
-
-    # 3. Modelo
+    # 4. Cargar modelo
     model = model_fun()
+    print("[OK] Modelo cargado")
 
-    # 4. Predicción
-    preds = model.predict(preprocessed)
-    class_idx = np.argmax(preds[0])
-    proba = float(np.max(preds[0]) * 100)
+    # 5. Generar Grad-CAM
+    gradcam_img = grad_cam(processed, array, model)
+    print("[OK] Grad-CAM generado")
 
-    labels = ["bacteriana", "normal", "viral"]
-    label = labels[class_idx]
+    # 6. Mostrar resultado
+    plt.imshow(gradcam_img)
+    plt.axis("off")
+    plt.title("Resultado Grad-CAM")
+    plt.show()
 
-    # 5. Grad-CAM
-    heatmap = grad_cam(model, preprocessed, layer_name)
-
-    return label, proba, heatmap, img_pil
+    # 7. Guardar en disco
+    os.makedirs("data/processed", exist_ok=True)
+    out_path = "data/processed/gradcam_result.jpg"
+    cv2.imwrite(out_path, gradcam_img[:, :, ::-1])  # convertir a BGR para OpenCV
+    print(f"[OK] Resultado guardado en: {out_path}")
 
 
 if __name__ == "__main__":
-    try:
-        resultado, prob, heatmap, img = predict_pipeline("data/raw/sample.dcm")
-        print(f"[OK] Predicción: {resultado} ({prob:.2f}%)")
-    except Exception as e:
-        print(f"[ERROR] {e}")
-
+    main()
