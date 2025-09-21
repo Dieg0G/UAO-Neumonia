@@ -3,20 +3,33 @@
 """
 grad_cam.py
 -----------
-Función para generar Grad-CAM a partir de:
-  - `processed` : salida de preprocess_img (1, H, W, C)
-  - `original`  : imagen original (H_orig, W_orig) o (H_orig, W_orig, 3)
-  - `model`     : tf.keras.Model ya cargado (no cargar dentro de este módulo)
-
-Devuelve:
-  - RGB uint8 (H_out, W_out, 3) con el heatmap superpuesto.
+Genera Grad-CAM, predice la clase y etiqueta la imagen resultante.
+Devuelve SOLO el array de la imagen RGB (H,W,3) listo para guardar/mostrar.
 """
 
-from typing import Optional
+import os
 import numpy as np
 import cv2
 import tensorflow as tf
 from tensorflow.keras import backend as K
+import matplotlib.pyplot as plt
+import warnings
+from typing import Tuple
+
+
+def _build_inputs_to_call(model, processed):
+    """
+    Construye el objeto que se pasará al modelo/grad_model:
+    - si model.input_names existe y tiene 1 nombre -> devuelve {name: processed}
+    - si processed ya es dict -> lo devuelve
+    - else -> devuelve processed (fallback)
+    """
+    if isinstance(processed, dict):
+        return processed
+    input_names = getattr(model, "input_names", None)
+    if input_names and len(input_names) == 1:
+        return {input_names[0]: processed}
+    return processed
 
 
 def grad_cam(processed: np.ndarray,
@@ -27,115 +40,156 @@ def grad_cam(processed: np.ndarray,
              alpha: float = 0.7) -> np.ndarray:
     """
     Genera Grad-CAM dado processed, original y model.
-
-    Parameters
-    ----------
-    processed : np.ndarray
-        Imagen preprocesada (1, H, W, C), dtype float32 o float64, valores en [0,1]
-    original : np.ndarray
-        Imagen original (H_orig, W_orig) o (H_orig, W_orig, 3), dtype uint8 o float
-    model : tf.keras.Model
-        Modelo ya cargado y listo para predecir.
-    layer_name : str
-        Nombre de la capa convolucional a usar.
-    out_size : tuple
-        Tamaño del heatmap final (width, height).
-    alpha : float
-        Transparencia para superponer heatmap sobre la original.
-
-    Returns
-    -------
-    np.ndarray
-        Imagen RGB uint8 (out_size) con heatmap superpuesto.
+    Devuelve RGB uint8 (out_size) con heatmap superpuesto.
     """
     if processed is None:
         raise ValueError("`processed` no puede ser None.")
     if model is None:
         raise ValueError("`model` no puede ser None.")
 
-    # 1) obtener la capa convolucional
+    # 1) obtener capa convolucional
     try:
         last_conv = model.get_layer(layer_name)
     except Exception as e:
         raise ValueError(f"No se encontró la capa '{layer_name}' en el modelo: {e}")
 
-    # 2) construir modelo intermedio (activaciones conv + predicciones)
-    grad_model = tf.keras.models.Model(inputs=model.input, outputs=[last_conv.output, model.output])
+    # 2) modelo intermedio
+    grad_model = tf.keras.models.Model(inputs=model.input,
+                                       outputs=[last_conv.output, model.output])
 
-    # 3) calcular gradientes con GradientTape (todo en TF)
-    with tf.GradientTape() as tape:
-        conv_outputs, preds = grad_model(processed, training=False)
+    # 3) preparar inputs (dict o tensor)
+    inputs_to_call = _build_inputs_to_call(model, processed)
 
-        # preds puede ser tensor o lista/tuple; normalizar a tensor
-        if isinstance(preds, (list, tuple)):
-            preds = preds[0]
+    # 4) calcular gradientes (silenciando solo el warning puntual)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning,
+                                message="The structure of `inputs` doesn't match the expected structure.")
+        with tf.GradientTape() as tape:
+            conv_outputs, preds = grad_model(inputs_to_call, training=False)
 
-        preds = tf.convert_to_tensor(preds)
+            if isinstance(preds, (list, tuple)):
+                preds = preds[0]
 
-        # manejar shapes distintas:
-        # - si preds tiene shape (num_classes,) -> vector de logits/probs
-        # - si preds tiene shape (1, num_classes) -> batch de 1
-        if preds.shape.rank == 1:
-            # vector (num_classes,)
-            pred_index = tf.argmax(preds, axis=-1)       # escalar tf.Tensor
-            class_channel = preds[pred_index]            # escalar tf.Tensor
-        else:
-            # assumimos (batch, num_classes)
-            pred_index = tf.argmax(preds, axis=1)[0]    # índice de la primera muestra
-            class_channel = preds[:, pred_index]        # tensor shape (1,)
+            preds = tf.convert_to_tensor(preds)
 
-    if class_channel is None:
-        raise RuntimeError("No se pudo obtener el canal de la clase para calcular gradientes.")
+            if preds.shape.rank == 1:
+                pred_index = tf.argmax(preds, axis=-1)
+                class_channel = preds[pred_index]
+            else:
+                pred_index = tf.argmax(preds, axis=1)[0]
+                class_channel = preds[:, pred_index]
 
     grads = tape.gradient(class_channel, conv_outputs)
     if grads is None:
-        raise RuntimeError("Gradientes = None. Verifica que la capa y el modelo sean compatibles para gradientes.")
+        raise RuntimeError("Gradientes = None. Verifica que la capa y el modelo sean compatibles.")
 
-    # 4) pooled_grads (importancia por canal) - aún en TF
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))  # shape (F,)
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    conv_outputs = conv_outputs[0]
+    weighted = conv_outputs * pooled_grads
+    heatmap = tf.reduce_mean(weighted, axis=-1)
+    heatmap = tf.nn.relu(heatmap)
+    heatmap = heatmap / (tf.reduce_max(heatmap) + K.epsilon())
 
-    # 5) obtener conv_outputs sin batch (h, w, F)
-    conv_outputs = conv_outputs[0]  # tensor
-
-    # 6) ponderar canales (operaciones TF, broadcasting funciona)
-    weighted = conv_outputs * pooled_grads  # (h, w, F)
-
-    # 7) heatmap: promedio sobre canales
-    heatmap = tf.reduce_mean(weighted, axis=-1)  # (h, w)
-    heatmap = tf.nn.relu(heatmap)                # ReLU
-    denom = tf.reduce_max(heatmap) + K.epsilon()
-    heatmap = heatmap / denom
-
-    # 8) pasar a numpy (a partir de aquí usamos OpenCV)
-    heatmap_np = heatmap.numpy()
-    heatmap_resized = cv2.resize(heatmap_np, out_size)
-
-    # 9) colormap
+    # 5) heatmap → colormap
+    heatmap_resized = cv2.resize(heatmap.numpy(), out_size)
     heatmap_uint8 = np.uint8(255 * heatmap_resized)
     heatmap_colored = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)  # BGR
 
-    # 10) preparar original para overlay
+    # 6) original → BGR
     orig = original.copy()
-    # si original está en float 0..1 lo convertimos a 0..255
-    if orig.dtype != np.uint8:
-        orig = orig.astype(np.float32)
-        if orig.max() <= 1.0:
-            orig = (orig * 255.0)
-        orig = np.clip(orig, 0, 255).astype(np.uint8)
-
-    # convertir a BGR si es grayscale
     if orig.ndim == 2:
         orig_bgr = cv2.cvtColor(orig, cv2.COLOR_GRAY2BGR)
-    elif orig.shape[-1] == 1:
+    elif orig.ndim == 3 and orig.shape[-1] == 1:
         orig_bgr = cv2.cvtColor(orig[:, :, 0], cv2.COLOR_GRAY2BGR)
     else:
         orig_bgr = orig
-
-    # redimensionar original al tamaño del heatmap
     orig_bgr = cv2.resize(orig_bgr, out_size)
 
-    # 11) superponer
-    superimposed = cv2.addWeighted(heatmap_colored, alpha, orig_bgr, 1 - alpha, 0)
+    # 7) superponer y devolver en RGB
+    superimposed_bgr = cv2.addWeighted(heatmap_colored, alpha, orig_bgr, 1 - alpha, 0)
+    superimposed_rgb = superimposed_bgr[:, :, ::-1]
+    return superimposed_rgb.astype(np.uint8)
 
-    # devolver en RGB para la GUI (PIL/Tkinter esperan RGB)
-    return superimposed[:, :, ::-1].astype(np.uint8)
+
+def _draw_label_on_image_rgb(rgb_img: np.ndarray, text: str) -> np.ndarray:
+    """
+    Dibuja un rectángulo negro semitransparente y texto blanco en la esquina superior izquierda.
+    Entrada: rgb_img (H,W,3) uint8
+    Retorna imagen RGB anotada.
+    """
+    # Convert RGB -> BGR para usar cv2.draw
+    bgr = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2BGR)
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.6
+    thickness = 2
+
+    (tw, th), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+    padding = 8
+    x0, y0 = 10, 10
+    x1 = x0 + tw + padding
+    y1 = y0 + th + padding
+
+    # rect background (opaco)
+    cv2.rectangle(bgr, (x0 - 3, y0 - 3), (x1, y1), (0, 0, 0), -1)
+    # text (blanco)
+    text_org = (x0 + 2, y0 + th - 2)
+    cv2.putText(bgr, text, text_org, font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
+
+    # volver a RGB
+    annotated_rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+    return annotated_rgb
+
+
+def main(processed,
+         original,
+         model,
+         layer_name: str = "conv10_thisone",
+         out_size: tuple = (512, 512),
+         alpha: float = 0.7,
+         save_path: str = "data/processed/gradcam_result.jpg") -> np.ndarray:
+    """
+    Wrapper que:
+     - obtiene la predicción (label, prob)
+     - genera la imagen Grad-CAM
+     - anota la imagen con label/prob
+     - guarda y muestra la imagen
+     - devuelve SOLO la imagen RGB (np.ndarray)
+    """
+    # 1) construir inputs para predecir (evita warnings)
+    inputs_to_call = _build_inputs_to_call(model, processed)
+
+    # 2) predecir (numpy array)
+    try:
+        preds = model.predict(inputs_to_call, verbose=0)
+    except Exception:
+        # fallback si algo raro ocurre
+        preds = model.predict(processed, verbose=0)
+
+    # normalizar preds a numpy
+    preds_np = np.array(preds)
+    class_idx = int(np.argmax(preds_np[0]))
+    proba = float(np.max(preds_np[0]) * 100.0)
+    labels = ["bacteriana", "normal", "viral"]
+    label = labels[class_idx] if class_idx < len(labels) else f"class_{class_idx}"
+
+    # 3) generar grad-cam (RGB)
+    gradcam_img = grad_cam(processed, original, model, layer_name=layer_name, out_size=out_size, alpha=alpha)
+
+    # 4) anotar la imagen con label+prob
+    text = f"{label} ({proba:.2f}%)"
+    annotated = _draw_label_on_image_rgb(gradcam_img, text)
+
+    # 5) guardar (cv2 espera BGR)
+    os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
+    cv2.imwrite(save_path, cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR))
+    print(f"[OK] Resultado guardado en: {save_path}")
+
+    # 6) mostrar
+    plt.imshow(annotated)
+    plt.title(f"Predicción: {label} ({proba:.2f}%)")
+    plt.axis("off")
+    plt.show()
+
+    # 7) devolver SOLO la imagen RGB (para que integrator siga funcionando)
+    return annotated

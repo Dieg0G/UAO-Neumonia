@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-8.4.2, pluggy-1.6.0 -- E:\MODULO01IA\UAO-Neumonia\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: E:\MODULO01IA\UAO-Neumonia
+configfile: pyproject.toml
+collecting ... collected 6 items
+
+tests/test_grad_cam.py::test_gradcam_image_generated[data/raw/bateria.jpeg] PASSED [ 16%]
+tests/test_load_model.py::test_model_fun_loads_real_model PASSED         [ 33%]
+tests/test_preprocess_img.py::test_preprocess_grayscale PASSED           [ 50%]
+tests/test_preprocess_img.py::test_preprocess_rgb PASSED                 [ 66%]
+tests/test_preprocess_img.py::test_invalid_input PASSED                  [ 83%]
+tests/test_read_img.py::test_read_default_image PASSED                   [100%]
+
+============================== 6 passed in 8.99s ==============================

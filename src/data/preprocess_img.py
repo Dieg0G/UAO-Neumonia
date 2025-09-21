@@ -37,7 +37,16 @@ def preprocess(image: np.ndarray, target_size: tuple = (512, 512)) -> np.ndarray
     return preprocessed
 
 
+def main(array: np.ndarray):
+    """Función principal para ser usada por integrator"""
+    try:
+        processed = preprocess(array)
+        print(f"[OK] Imagen preprocesada con shape: {processed.shape}")
+        return processed
+    except Exception as e:
+        print(f"Error en preprocesamiento: {e}")
+        return None
+
+
 if __name__ == "__main__":
-    # ⚠️ Aquí NO se lee de nuevo la imagen
-    # Para probarlo, otro script debe haber creado "array" con read_img.py
-    print("[INFO] Este módulo solo define preprocess(). Úsalo desde integrator.py")
+    print("[INFO] Este módulo no funciona solo. Debes pasarle un array desde read_img.")

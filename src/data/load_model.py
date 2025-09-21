@@ -7,6 +7,7 @@ def handle_custom_loss(y_true, y_pred):
     """funcion personalizada para la función de pérdida."""
     return keras.losses.categorical_crossentropy(y_true, y_pred, from_logits=False, reduction='mean')
 
+
 def model_fun():
     """
     Carga el modelo de detección de neumonía
@@ -43,10 +44,17 @@ def model_fun():
         )
         return model
 
-def handle_custom_loss(y_true, y_pred):
-    """funcion personalizada para la función de pérdida."""
-    return keras.losses.categorical_crossentropy(y_true, y_pred, from_logits=False, reduction='mean')
+
+def main():
+    """Función principal para ser usada por integrator"""
+    try:
+        model = model_fun()
+        print("[OK] Modelo cargado")
+        return model
+    except Exception as e:
+        print(f"[ERROR] No se pudo cargar el modelo: {e}")
+        return None
+
 
 if __name__ == "__main__":
-    model = model_fun()
-    print("Model loaded successfully:", model)
+    main()
