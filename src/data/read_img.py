@@ -22,9 +22,14 @@ from PIL import Image
 def read_img(path: str):
     """
     Lee imagen desde path en formato DICOM o estándar.
-    Retorna:
-        img_array (np.ndarray): arreglo procesable
-        img_show (PIL.Image): imagen lista para interfaz
+    
+    Args:
+        path (str): ruta de la imagen (.dcm, .jpg, .jpeg, .png)
+
+    Returns:
+        tuple:
+            img_array (np.ndarray): arreglo procesable para el modelo
+            img_show (PIL.Image): imagen lista para la GUI
     """
     ext = os.path.splitext(path)[-1].lower()
 
@@ -47,20 +52,3 @@ def read_img(path: str):
         raise ValueError(f"Formato no soportado: {ext}")
 
     return img_array, img_show
-
-
-def main(path="data/raw/bateria.jpeg"):
-    """Función principal para ser usada por integrator"""
-    try:
-        array, img = read_img(path)
-        print(f"[OK] Imagen cargada con forma: {array.shape}")
-        img.show()  # Solo si quieres mostrar la imagen aquí
-        return array
-    except Exception as e:
-        print(f"[ERROR] {e}")
-        return None
-
-
-if __name__ == "__main__":
-    main()
-
