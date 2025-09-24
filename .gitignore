@@ -140,3 +140,4 @@ data/models/
 *.zip
 *.tar.gz
 *.rar
+"data/processed/*.jpg" 
