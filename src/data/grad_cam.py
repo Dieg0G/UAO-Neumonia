@@ -191,5 +191,5 @@ def main(processed,
     plt.axis("off")
     plt.show()
 
-    # 7) devolver SOLO la imagen RGB (para que integrator siga funcionando)
-    return annotated
+    # 7) devolver imagen anotada + etiqueta
+    return annotated, label
