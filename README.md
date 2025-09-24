@@ -26,23 +26,33 @@ La interfaz gráfica permite cargar imágenes en formatos DICOM, JPG y PNG, real
 
 ```
 proyecto-neumonia/
+├── assets/
+│   ├── style.css
 ├── data/
 │   ├── external/
-│   │   └── models/
-│   │       └── conv_MLP_84.h5           # Modelo entrenado
 │   ├── processed/
 │   └── raw/
+├── docs/
+│   ├── captura_gui.png
+│   ├── documentation.py
+│   ├── flujo.png
+│   ├── r.png
+├── neumonia/
+│   ├── app.py
 ├── src/
 │   ├── data/
 │   │   ├── __init__.py
 │   │   ├── load_model.py                # Carga el modelo .h5
 │   │   ├── preprocess_img.py            # Preprocesa imágenes (resize, CLAHE, normalización)
 │   │   └── grad_cam.py                  # Genera mapa de calor Grad-CAM (sin preprocesar)
-│   └── interface/
-│       └── detector_neumonia.py         # Interfaz gráfica Tkinter (punto de entrada)
+│   └── models/
+│       └── conv_MLP_84.h5         # Modelo entrenado
 ├── tests/
-│   ├── test_historial.py
-│   └── test_imports.py
+│   ├── pytest_results.png
+│   ├── test_grad_cam.py
+│   ├── test_load_model.py
+│   ├── test_preprocess_img.py
+│   └── test_read_img.py
 ├── requirements.txt
 ├── README.md
 └── LICENSE
