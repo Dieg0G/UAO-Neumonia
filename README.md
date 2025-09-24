@@ -163,22 +163,15 @@ python -m src.interface.detector_neumonia
 > ✅ El entorno está activado, `uv` ya instaló todas las dependencias, y el módulo se ejecuta sin errores.
 
 
+## 🐳 Docker (Ejecución sin GUI)
 
+Este proyecto también puede ejecutarse en un contenedor Docker.  
+👉 En esta opción el contenedor corre el pipeline (`integrator.py`) y guarda los resultados en `data/processed/`.
 
-
-
-### 🐳 Docker 
-
-
+### 1. Construir la imagen
+Desde la raíz del proyecto:
 ```bash
-sudo docker build -t neumonia-app .
-xhost +local:docker
-sudo docker run -it \
-  --net=host \
-  -e DISPLAY=$DISPLAY \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  neumonia-app
-```
+docker build -t neumonia-app .
 
 
 ### 🛠️ Troubleshooting (actualizado para `uv`)
