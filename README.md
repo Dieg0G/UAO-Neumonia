@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.9-blue.svg)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13.0-orange.svg)](https://www.tensorflow.org/)
-[![License](https://img.shields.io/badge/License-GNU%20GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License](https://img.shields.io/badge/License-GPL-blue.svg)](https://www.gnu.org/licenses/gpl.html)
 
 > **Aplicación de inteligencia artificial para el apoyo al diagnóstico médico de neumonía en radiografías de tórax**, con visualización explicativa mediante Grad-CAM.
 
