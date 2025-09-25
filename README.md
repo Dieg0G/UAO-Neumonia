@@ -117,12 +117,12 @@ proyecto-neumonia/
    >   
    > Una vez descargado, créalo en la carpeta:  
    > ```
-   > UAO-Neumonia/data/models/conv_MLP_84.h5
+   > UAO-Neumonia/src/models/conv_MLP_84.h5
    > ```
    >   
-   > Si la carpeta `data/models/` no existe, créala:
+   > Si la carpeta `src/models/` no existe, créala:
    > ```bash
-   > mkdir -p data/models
+   > mkdir -p src/models
    > ```
 
 6. **Verificar la estructura de archivos**  
