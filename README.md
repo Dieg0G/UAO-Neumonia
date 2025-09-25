@@ -18,7 +18,7 @@ Este sistema implementa un modelo de **Deep Learning basado en Redes Neuronales 
 
 Además, integra la técnica de **Grad-CAM (Gradient-weighted Class Activation Mapping)** para generar mapas de calor que resaltan las regiones de la imagen más relevantes para la decisión del modelo, mejorando la transparencia y confianza clínica en las predicciones.
 
-La interfaz gráfica permite cargar imágenes en formatos DICOM, JPG y PNG, realizar predicciones en tiempo real y generar reportes para documentación médica.
+La interfaz gráfica permite cargar imágenes en formatos DICOM realizar predicciones en tiempo real y generar reportes para documentación médica.
 
 ---
 
