@@ -157,7 +157,7 @@ source .venv/bin/activate    # Linux/macOS
 # o
 .\.venv\Scripts\activate     # Windows
 
-python -m src.interface.detector_neumonia
+python -m neumonia.app.py
 ```
 
 > ✅ El entorno está activado, `uv` ya instaló todas las dependencias, y el módulo se ejecuta sin errores.
